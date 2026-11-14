@@ -10,33 +10,73 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CviceniRouteImport } from './routes/cviceni'
+import { Route as LimityRouteImport } from './routes/limity'
+import { Route as NastaveniRouteImport } from './routes/nastaveni'
+import { Route as PauzaRouteImport } from './routes/pauza'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CviceniRoute = CviceniRouteImport.update({
+  id: '/cviceni',
+  path: '/cviceni',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LimityRoute = LimityRouteImport.update({
+  id: '/limity',
+  path: '/limity',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NastaveniRoute = NastaveniRouteImport.update({
+  id: '/nastaveni',
+  path: '/nastaveni',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PauzaRoute = PauzaRouteImport.update({
+  id: '/pauza',
+  path: '/pauza',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/cviceni': typeof CviceniRoute
+  '/limity': typeof LimityRoute
+  '/nastaveni': typeof NastaveniRoute
+  '/pauza': typeof PauzaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/cviceni': typeof CviceniRoute
+  '/limity': typeof LimityRoute
+  '/nastaveni': typeof NastaveniRoute
+  '/pauza': typeof PauzaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/cviceni': typeof CviceniRoute
+  '/limity': typeof LimityRoute
+  '/nastaveni': typeof NastaveniRoute
+  '/pauza': typeof PauzaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/cviceni' | '/limity' | '/nastaveni' | '/pauza'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/cviceni' | '/limity' | '/nastaveni' | '/pauza'
+  id: '__root__' | '/' | '/cviceni' | '/limity' | '/nastaveni' | '/pauza'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CviceniRoute: typeof CviceniRoute
+  LimityRoute: typeof LimityRoute
+  NastaveniRoute: typeof NastaveniRoute
+  PauzaRoute: typeof PauzaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +88,43 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cviceni': {
+      id: '/cviceni'
+      path: '/cviceni'
+      fullPath: '/cviceni'
+      preLoaderRoute: typeof CviceniRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/limity': {
+      id: '/limity'
+      path: '/limity'
+      fullPath: '/limity'
+      preLoaderRoute: typeof LimityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/nastaveni': {
+      id: '/nastaveni'
+      path: '/nastaveni'
+      fullPath: '/nastaveni'
+      preLoaderRoute: typeof NastaveniRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pauza': {
+      id: '/pauza'
+      path: '/pauza'
+      fullPath: '/pauza'
+      preLoaderRoute: typeof PauzaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CviceniRoute: CviceniRoute,
+  LimityRoute: LimityRoute,
+  NastaveniRoute: NastaveniRoute,
+  PauzaRoute: PauzaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

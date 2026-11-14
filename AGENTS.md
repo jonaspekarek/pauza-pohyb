@@ -28,3 +28,9 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+- App state lives in a local store (`src/lib/pauza/store.ts`, useSyncExternalStore + localStorage) with a fixed pre-hydration snapshot; there is no backend because the prototype keeps all data on-device for privacy.
+- Pure limit/bonus/streak rules live in `src/lib/pauza/logic.ts` with tests beside them, so they stay testable without the UI.
+- Usage data goes through the `UsageProvider` interface (`src/lib/pauza/usage-provider.ts`); the web build only ships the simulated provider, so a native Android/iOS shell can plug in real, permission-gated usage later.
+- Camera pose detection (MediaPipe) is dynamically imported only after the user turns the camera on, so no camera code or model loads in the background.
