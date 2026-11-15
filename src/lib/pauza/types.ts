@@ -1,6 +1,29 @@
+export type Lang = "cs" | "en" | "es";
+
 export type LimitAction = "exercise" | "reminder" | "lock";
 
-export type ExerciseId = "drepy" | "jumping-jacks" | "plank" | "kliky-o-zed" | "protazeni";
+export type ExerciseId =
+  | "kliky"
+  | "kliky-na-kolenou"
+  | "kliky-o-zed"
+  | "sklapovacky"
+  | "sedy-lehy"
+  | "plank"
+  | "bocni-plank"
+  | "drepy"
+  | "vypady"
+  | "drep-s-vyskokem"
+  | "jumping-jacks"
+  | "horolezec"
+  | "burpees"
+  | "most"
+  | "vypony"
+  | "sed-u-zdi"
+  | "beh-na-miste"
+  | "zvedani-nohou"
+  | "ruske-otacky"
+  | "superman"
+  | "protazeni";
 
 export interface AppRule {
   id: string;
@@ -14,9 +37,15 @@ export interface AppRule {
   bonusMinutes: number;
   action: LimitAction;
   exerciseId: ExerciseId;
+  /** How many reps (or seconds for timed exercises) the break requires. */
+  exerciseTarget: number;
+  /** Break screen offers to start with the camera on (user still taps start). */
+  autoCamera: boolean;
   enabled: boolean;
   /** True once today's limit expiry has been handled, so it fires only once. */
   breakTriggered: boolean;
+  /** User chose "ignore for today": the limit does not apply until midnight. */
+  ignoredToday: boolean;
 }
 
 export interface BreakLog {
@@ -28,6 +57,10 @@ export interface BreakLog {
   mode: "manual" | "camera";
   completed: boolean;
   bonusGranted: number;
+  /** Reps or seconds actually done. */
+  amount?: number | undefined;
+  /** Estimated kilocalories burned. */
+  kcal?: number | undefined;
 }
 
 export interface Settings {
@@ -35,6 +68,20 @@ export interface Settings {
   rewardMinutes: number;
   cameraFeedback: boolean;
   onboarded: boolean;
+  language: Lang;
+}
+
+export interface WeightEntry {
+  /** Local date key YYYY-MM-DD. */
+  date: string;
+  kg: number;
+}
+
+export interface BodyData {
+  heightCm: number | null;
+  weights: WeightEntry[];
+  /** True while the weights are the bundled sample data. */
+  sample: boolean;
 }
 
 export interface PersistedState {
@@ -42,6 +89,7 @@ export interface PersistedState {
   rules: AppRule[];
   history: BreakLog[];
   settings: Settings;
+  body: BodyData;
   /** Local date key (YYYY-MM-DD) when usage counters were last reset. */
   dayKey: string;
 }

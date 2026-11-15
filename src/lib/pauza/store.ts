@@ -1,9 +1,22 @@
 import { useSyncExternalStore } from "react";
-import { applyUsage, bonusForCompletedBreak, grantBonus, resetForNewDay, todayKey } from "./logic";
+import { getExercise, exerciseSeconds, isExerciseId } from "./exercises";
+import {
+  applyUsage,
+  bonusForCompletedBreak,
+  estimateKcal,
+  grantBonus,
+  ignoreForToday,
+  latestWeight,
+  resetForNewDay,
+  todayKey,
+  upsertWeight,
+} from "./logic";
 import { createSeedState } from "./seed";
-import type { AppRule, AppState, BreakLog, PersistedState, Settings } from "./types";
+import type { AppRule, AppState, BodyData, BreakLog, Lang, PersistedState, Settings } from "./types";
 
 const STORAGE_KEY = "pauza-pohyb:v1";
+/** Used for calorie estimates until the user enters a weight. */
+export const DEFAULT_WEIGHT_KG = 70;
 
 let state: AppState | null = null;
 // Stable pre-hydration snapshot: SSR and every hydrating subtree render the same demo data.
@@ -29,8 +42,9 @@ function persist(s: AppState) {
   const data: PersistedState = {
     version: 1,
     rules: s.rules,
-    history: s.history.slice(0, 200),
+    history: s.history.slice(0, 300),
     settings: s.settings,
+    body: s.body,
     dayKey: s.dayKey,
   };
   try {
@@ -59,21 +73,46 @@ function newId(prefix: string) {
   return `${prefix}-${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`;
 }
 
+/** Fills fields added in later versions so older saved data keeps working. */
+function normalizeRule(r: Partial<AppRule> & Pick<AppRule, "id" | "name">): AppRule {
+  const exerciseId = isExerciseId(r.exerciseId) ? r.exerciseId : "drepy";
+  return {
+    appId: "custom",
+    limitMinutes: 30,
+    usedMinutes: 0,
+    bonusMinutes: 0,
+    action: "exercise",
+    enabled: true,
+    breakTriggered: false,
+    ...r,
+    exerciseId,
+    exerciseTarget: typeof r.exerciseTarget === "number" && r.exerciseTarget > 0 ? r.exerciseTarget : getExercise(exerciseId).target,
+    autoCamera: r.autoCamera ?? false,
+    ignoredToday: r.ignoredToday ?? false,
+  };
+}
+
+function detectLanguage(): Lang {
+  const l = (navigator.language || "cs").slice(0, 2).toLowerCase();
+  return l === "en" || l === "es" ? l : "cs";
+}
+
 /** Loads saved data from this device. Call once from an effect after mount. */
 export function hydrateStore() {
   const current = get();
   if (current.hydrated) return;
-  let loaded: AppState = { ...current };
+  let loaded: AppState = { ...current, settings: { ...current.settings, language: detectLanguage() } };
   try {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as PersistedState;
+      const parsed = JSON.parse(raw) as Partial<PersistedState>;
       if (parsed?.version === 1 && Array.isArray(parsed.rules)) {
         loaded = {
           ...current,
-          rules: parsed.rules,
-          history: parsed.history ?? [],
+          rules: parsed.rules.map((r) => normalizeRule(r)),
+          history: (parsed.history ?? []).map((h) => ({ ...h, exerciseId: isExerciseId(h.exerciseId) ? h.exerciseId : "drepy" })),
           settings: { ...current.settings, ...parsed.settings },
+          body: { ...current.body, ...(parsed.body ?? {}) },
           dayKey: parsed.dayKey ?? todayKey(),
         };
       }
@@ -84,7 +123,11 @@ export function hydrateStore() {
   set({ ...resetForNewDay(loaded, todayKey()), hydrated: true });
 }
 
-export type RuleInput = Pick<AppRule, "appId" | "name" | "limitMinutes" | "action" | "exerciseId">;
+export type RuleInput = Pick<AppRule, "appId" | "name" | "limitMinutes" | "action" | "exerciseId" | "exerciseTarget" | "autoCamera">;
+
+function currentWeight(body: BodyData): number {
+  return latestWeight(body.weights) ?? DEFAULT_WEIGHT_KG;
+}
 
 export const pauzaActions = {
   addRule(input: RuleInput) {
@@ -96,6 +139,7 @@ export const pauzaActions = {
       bonusMinutes: 0,
       enabled: true,
       breakTriggered: false,
+      ignoredToday: false,
     };
     set({ ...s, rules: [...s.rules, rule] });
     return rule;
@@ -123,27 +167,63 @@ export const pauzaActions = {
   resetUsage(id: string) {
     pauzaActions.updateRule(id, { usedMinutes: 0, bonusMinutes: 0, breakTriggered: false });
   },
+  /** The limit stops applying until tomorrow; the rule itself stays as configured. */
+  ignoreToday(id: string) {
+    const s = get();
+    set({
+      ...s,
+      rules: s.rules.map((r) => (r.id === id ? ignoreForToday(r) : r)),
+    });
+  },
+  unignoreToday(id: string) {
+    pauzaActions.updateRule(id, { ignoredToday: false, breakTriggered: false });
+  },
   setSimulating(id: string | null) {
     set({ ...get(), simulatingRuleId: id });
   },
-  logBreak(entry: Omit<BreakLog, "id" | "at" | "bonusGranted">): number {
+  logBreak(entry: Omit<BreakLog, "id" | "at" | "bonusGranted" | "kcal">): { bonus: number; kcal: number } {
     const s = get();
     const rule = entry.ruleId ? s.rules.find((r) => r.id === entry.ruleId) : undefined;
     const bonus = entry.completed ? bonusForCompletedBreak(rule, s.settings.rewardMinutes) : 0;
-    const log: BreakLog = { ...entry, id: newId("break"), at: new Date().toISOString(), bonusGranted: bonus };
+    const ex = getExercise(entry.exerciseId);
+    const kcal = entry.completed && entry.amount ? estimateKcal(ex.met, exerciseSeconds(ex, entry.amount), currentWeight(s.body)) : 0;
+    const log: BreakLog = { ...entry, id: newId("break"), at: new Date().toISOString(), bonusGranted: bonus, kcal };
     set({
       ...s,
       history: [log, ...s.history],
       rules: bonus > 0 && rule ? s.rules.map((r) => (r.id === rule.id ? grantBonus(r, bonus) : r)) : s.rules,
     });
-    return bonus;
+    return { bonus, kcal };
   },
   updateSettings(patch: Partial<Settings>) {
     const s = get();
     set({ ...s, settings: { ...s.settings, ...patch } });
   },
+  setHeight(cm: number | null) {
+    const s = get();
+    set({ ...s, body: { ...s.body, heightCm: cm } });
+  },
+  /** Saves today's weight. The first real entry replaces the bundled sample weights. */
+  logWeight(kg: number) {
+    const s = get();
+    const base = s.body.sample ? [] : s.body.weights;
+    set({ ...s, body: { ...s.body, sample: false, weights: upsertWeight(base, todayKey(), kg) } });
+  },
+  clearWeights() {
+    const s = get();
+    set({ ...s, body: { ...s.body, sample: false, weights: [] } });
+  },
   resetDemo() {
     const seed = createSeedState();
-    set({ ...seed, hydrated: true, settings: { ...seed.settings, onboarded: true } });
+    const s = get();
+    set({ ...seed, hydrated: true, settings: { ...seed.settings, onboarded: true, language: s.settings.language } });
   },
 };
+
+/** Kcal for a log entry; older entries without a stored value are estimated. */
+export function logKcal(h: BreakLog, weightKg: number): number {
+  if (!h.completed) return 0;
+  if (typeof h.kcal === "number") return h.kcal;
+  const ex = getExercise(h.exerciseId);
+  return estimateKcal(ex.met, exerciseSeconds(ex, h.amount ?? ex.target), weightKg);
+}
