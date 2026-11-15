@@ -21,6 +21,9 @@ const base: AppRule = {
   exerciseId: "drepy",
   enabled: true,
   breakTriggered: false,
+  exerciseTarget: 10,
+  autoCamera: false,
+  ignoredToday: false,
 };
 
 describe("limit rules", () => {

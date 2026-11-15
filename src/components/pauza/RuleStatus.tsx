@@ -7,6 +7,7 @@ const LABEL: Record<RuleStatus, string> = {
   warning: "Blíží se limit",
   expired: "Limit vyčerpán",
   paused: "Vypnuto",
+  ignored: "Dnes nepočítáno",
 };
 
 export function RuleStatusBadge({ status }: { status: RuleStatus }) {

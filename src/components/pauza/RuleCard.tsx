@@ -1,3 +1,4 @@
+import { cs } from "@/lib/i18n/cs";
 import { Link } from "@tanstack/react-router";
 import { Pause, Pencil, Play, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,7 @@ export function RuleCard({
             )}
           </div>
           <p className="text-xs text-muted-foreground">
-            {ACTION_LABEL[rule.action]} · {exercise.name}
+            {ACTION_LABEL[rule.action]} · {cs.common.task(exercise.kind, rule.exerciseTarget, cs.ex[exercise.id].name)}
           </p>
         </div>
         {variant === "full" ? (

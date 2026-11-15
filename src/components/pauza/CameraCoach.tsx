@@ -57,7 +57,7 @@ export function CameraCoach({
   const [feedback, setFeedback] = useState("");
   const [autoStopped, setAutoStopped] = useState(false);
 
-  const useFeedback = feedbackEnabled && exercise.cameraFeedback;
+  const useFeedback = feedbackEnabled && !!exercise.counter;
 
   const stop = useCallback(() => {
     sessionRef.current += 1;
@@ -321,7 +321,7 @@ export function CameraCoach({
                 <li>• Nic se nenahrává, neukládá ani neodesílá.</li>
                 <li>
                   •{" "}
-                  {exercise.cameraFeedback
+                  {!!exercise.counter
                     ? "U dřepů dává orientační zpětnou vazbu přímo v zařízení – nemusí být přesná."
                     : "U tohoto cviku slouží jen jako zrcadlo, dokončení potvrdíte ručně."}
                 </li>

@@ -1,9 +1,10 @@
+import { cs } from "@/lib/i18n/cs";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Camera, CheckCircle2, ChevronRight, CircleSlash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { EXERCISES, exerciseTargetLabel, getExercise } from "@/lib/pauza/exercises";
+import { EXERCISES, getExercise } from "@/lib/pauza/exercises";
 import { usePauzaState } from "@/lib/pauza/store";
 
 export const Route = createFileRoute("/cviceni")({
@@ -43,14 +44,14 @@ function ExercisesPage() {
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <h2 className="text-base font-semibold">{e.name}</h2>
-                    {e.cameraFeedback && (
+                    <h2 className="text-base font-semibold">{cs.ex[e.id].name}</h2>
+                    {e.counter && (
                       <Badge variant="outline" className="gap-1 rounded-full border-info/30 bg-info/10 px-1.5 text-[10px] text-info">
                         <Camera className="h-3 w-3" aria-hidden /> zpětná vazba
                       </Badge>
                     )}
                   </div>
-                  <p className="text-xs text-muted-foreground">{exerciseTargetLabel(e)}</p>
+                  <p className="text-xs text-muted-foreground">{cs.common.target(e.kind, e.target)}</p>
                 </div>
                 <Button asChild size="sm" variant="hero">
                   <Link to="/pauza" search={{ cvik: e.id }}>
@@ -64,15 +65,15 @@ function ExercisesPage() {
               </CollapsibleTrigger>
               <CollapsibleContent className="space-y-3 px-4 pb-4 text-sm">
                 <ol className="list-decimal space-y-1 pl-5 text-muted-foreground">
-                  {e.steps.map((s) => (
+                  {cs.ex[e.id].steps.map((s: string) => (
                     <li key={s}>{s}</li>
                   ))}
                 </ol>
                 <p className="rounded-xl bg-secondary p-3">
                   <span className="font-semibold text-primary">Lehčí varianta: </span>
-                  {e.easier}
+                  {cs.ex[e.id].easier}
                 </p>
-                <p className="text-xs text-warning">{e.safety}</p>
+                <p className="text-xs text-warning">{cs.ex[e.id].safety}</p>
               </CollapsibleContent>
             </Collapsible>
           );
@@ -99,7 +100,7 @@ function ExercisesPage() {
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-semibold">
-                      {ex.name}
+                      {cs.ex[ex.id].name}
                       {h.mode === "camera" && <Camera className="ml-1.5 inline h-3.5 w-3.5 text-info" aria-label="s kamerou" />}
                     </p>
                     <p className="text-xs text-muted-foreground">

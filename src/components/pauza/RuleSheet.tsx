@@ -1,3 +1,4 @@
+import { cs } from "@/lib/i18n/cs";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
 import { APP_CATALOG } from "@/lib/pauza/apps";
-import { EXERCISES, exerciseTargetLabel } from "@/lib/pauza/exercises";
+import { EXERCISES, getExercise, targetBounds } from "@/lib/pauza/exercises";
 import { formatMinutes } from "@/lib/pauza/logic";
 import { pauzaActions, type RuleInput } from "@/lib/pauza/store";
 import type { AppRule, ExerciseId, LimitAction } from "@/lib/pauza/types";
@@ -23,7 +24,7 @@ import { AppTile } from "./AppTile";
 import { ACTION_DESCRIPTION, ACTION_LABEL } from "./RuleStatus";
 import { DemoBadge } from "./DemoBadge";
 
-const EMPTY: RuleInput = { appId: "tiktok", name: "TikTok", limitMinutes: 30, action: "exercise", exerciseId: "drepy" };
+const EMPTY: RuleInput = { appId: "tiktok", name: "TikTok", limitMinutes: 30, action: "exercise", exerciseId: "kliky", exerciseTarget: 10, autoCamera: true };
 
 export function RuleSheet({
   open,
@@ -46,6 +47,8 @@ export function RuleSheet({
         limitMinutes: editing.limitMinutes,
         action: editing.action,
         exerciseId: editing.exerciseId,
+        exerciseTarget: editing.exerciseTarget,
+        autoCamera: editing.autoCamera,
       });
       setCustomName(editing.appId === "custom" ? editing.name : "");
     } else {
@@ -204,7 +207,7 @@ export function RuleSheet({
                     key={e.id}
                     type="button"
                     aria-pressed={active}
-                    onClick={() => setForm((f) => ({ ...f, exerciseId: e.id as ExerciseId }))}
+                    onClick={() => setForm((f) => ({ ...f, exerciseId: e.id as ExerciseId, exerciseTarget: e.target }))}
                     className={cn(
                       "flex items-center gap-2 rounded-xl border p-2.5 text-left transition-colors",
                       active ? "border-primary bg-primary/10" : "border-border hover:bg-secondary",
@@ -212,13 +215,57 @@ export function RuleSheet({
                   >
                     <Icon className={cn("h-5 w-5 shrink-0", active ? "text-primary" : "text-muted-foreground")} aria-hidden />
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-semibold">{e.name}</span>
-                      <span className="block text-[11px] text-muted-foreground">{exerciseTargetLabel(e)}</span>
+                      <span className="block truncate text-sm font-semibold">{cs.ex[e.id].name}</span>
+                      <span className="block text-[11px] text-muted-foreground">{cs.common.target(e.kind, e.target)}</span>
                     </span>
                   </button>
                 );
               })}
             </div>
+          </section>
+
+          <section>
+            <div className="mb-2 flex items-baseline justify-between">
+              <Label className="text-sm font-semibold">Kolik toho musíte udělat</Label>
+              <span className="font-display text-2xl font-bold tabular text-primary">
+                {cs.common.target(getExercise(form.exerciseId).kind, form.exerciseTarget)}
+              </span>
+            </div>
+            {(() => {
+              const b = targetBounds(getExercise(form.exerciseId));
+              const change = (d: number) =>
+                setForm((f) => ({ ...f, exerciseTarget: Math.min(b.max, Math.max(b.min, f.exerciseTarget + d)) }));
+              return (
+                <div className="flex items-center gap-3">
+                  <Button type="button" variant="soft" size="iconLg" aria-label="Méně" onClick={() => change(-b.step)}>−</Button>
+                  <Slider
+                    min={b.min}
+                    max={b.max}
+                    step={b.step}
+                    value={[form.exerciseTarget]}
+                    onValueChange={([v]) => setForm((f) => ({ ...f, exerciseTarget: v ?? f.exerciseTarget }))}
+                    aria-label="Počet opakování nebo sekund"
+                  />
+                  <Button type="button" variant="soft" size="iconLg" aria-label="Více" onClick={() => change(b.step)}>+</Button>
+                </div>
+              );
+            })()}
+            {form.action === "exercise" && (
+              <label className="mt-4 flex items-start justify-between gap-3 rounded-xl border border-border p-3">
+                <span>
+                  <span className="block text-sm font-semibold">Zapnout kameru při pauze</span>
+                  <span className="block text-xs text-muted-foreground">
+                    Po stisknutí „Začít“ se rovnou zapne kamera. Nic se nenahrává.
+                  </span>
+                </span>
+                <input
+                  type="checkbox"
+                  className="mt-1 h-5 w-5 accent-primary"
+                  checked={form.autoCamera}
+                  onChange={(e) => setForm((f) => ({ ...f, autoCamera: e.target.checked }))}
+                />
+              </label>
+            )}
           </section>
         </div>
 

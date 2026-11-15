@@ -1,3 +1,4 @@
+import { cs } from "@/lib/i18n/cs";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { Camera, Check, HandHeart, Hand, Minus, Pause, Play, Plus, RotateCcw, X } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -7,7 +8,7 @@ import { DemoBadge } from "@/components/pauza/DemoBadge";
 import { ProgressRing } from "@/components/pauza/ProgressRing";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EXERCISES, exerciseTargetLabel, getExercise } from "@/lib/pauza/exercises";
+import { EXERCISES, getExercise } from "@/lib/pauza/exercises";
 import { formatClock } from "@/lib/pauza/logic";
 import { pauzaActions, usePauzaState } from "@/lib/pauza/store";
 import type { ExerciseId } from "@/lib/pauza/types";
@@ -43,10 +44,11 @@ function BreakPage() {
 
   const [exerciseId, setExerciseId] = useState<ExerciseId>(getExercise(cvik ?? rule?.exerciseId).id);
   const exercise = getExercise(exerciseId);
+  const target = rule && rule.exerciseId === exercise.id ? rule.exerciseTarget : exercise.target;
   const [mode, setMode] = useState<"manual" | "camera">("manual");
   const [phase, setPhase] = useState<Phase>("active");
   const [count, setCount] = useState(0);
-  const [secondsLeft, setSecondsLeft] = useState(exercise.target);
+  const [secondsLeft, setSecondsLeft] = useState(target);
   const [running, setRunning] = useState(false);
   const [bonus, setBonus] = useState(0);
   const endRef = useRef<number | null>(null);
@@ -54,10 +56,10 @@ function BreakPage() {
   // Reset progress when the exercise changes.
   useEffect(() => {
     setCount(0);
-    setSecondsLeft(exercise.target);
+    setSecondsLeft(target);
     setRunning(false);
     endRef.current = null;
-  }, [exercise.id, exercise.target]);
+  }, [exercise.id, target]);
 
   useEffect(() => {
     if (!running) return;
@@ -75,12 +77,18 @@ function BreakPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [running]);
 
-  const reached = exercise.kind === "reps" ? count >= exercise.target : secondsLeft <= 0;
-  const progress = exercise.kind === "reps" ? count / exercise.target : 1 - secondsLeft / exercise.target;
+  const reached = exercise.kind === "reps" ? count >= target : secondsLeft <= 0;
+  const progress = exercise.kind === "reps" ? count / target : 1 - secondsLeft / target;
 
   function complete() {
     setRunning(false);
-    const granted = pauzaActions.logBreak({ exerciseId: exercise.id, ruleId: rule?.id, mode, completed: true });
+    const { bonus: granted } = pauzaActions.logBreak({
+      exerciseId: exercise.id,
+      ruleId: rule?.id,
+      mode,
+      completed: true,
+      amount: exercise.kind === "reps" ? count : Math.round(target - secondsLeft),
+    });
     setBonus(granted);
     setPhase("done");
   }
@@ -103,7 +111,7 @@ function BreakPage() {
           </div>
           <h1 className="mt-8 text-4xl font-extrabold">Skvělá práce!</h1>
           <p className="mt-2 max-w-xs text-muted-foreground">
-            {exercise.name} hotovo. Tělo i hlava si zaslouží tyhle malé pauzy.
+            {cs.ex[exercise.id].name} hotovo. Tělo i hlava si zaslouží tyhle malé pauzy.
           </p>
           {bonus > 0 && rule && (
             <div className="mt-6 flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3">
@@ -126,7 +134,7 @@ function BreakPage() {
           </Button>
           <Button variant="calm" size="xl" className="w-full" onClick={() => {
               setCount(0);
-              setSecondsLeft(exercise.target);
+              setSecondsLeft(target);
               setPhase("active");
             }}
           >
@@ -225,7 +233,7 @@ function BreakPage() {
               e.id === exerciseId ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:text-foreground",
             )}
           >
-            {e.name}
+            {cs.ex[e.id].name}
           </button>
         ))}
       </div>
@@ -236,18 +244,18 @@ function BreakPage() {
             <Icon className="h-6 w-6" aria-hidden />
           </span>
           <div>
-            <h1 className="text-2xl font-extrabold leading-tight">{exercise.name}</h1>
-            <p className="text-sm text-muted-foreground">Cíl: {exerciseTargetLabel(exercise)}</p>
+            <h1 className="text-2xl font-extrabold leading-tight">{cs.ex[exercise.id].name}</h1>
+            <p className="text-sm text-muted-foreground">Cíl: {cs.common.target(exercise.kind, target)}</p>
           </div>
         </div>
         <ol className="mt-3 list-decimal space-y-0.5 pl-5 text-sm text-muted-foreground">
-          {exercise.steps.map((s) => (
+          {cs.ex[exercise.id].steps.map((s: string) => (
             <li key={s}>{s}</li>
           ))}
         </ol>
         <p className="mt-3 rounded-xl bg-secondary p-2.5 text-xs">
           <span className="font-semibold text-primary">Lehčí varianta: </span>
-          {exercise.easier}
+          {cs.ex[exercise.id].easier}
         </p>
       </section>
 
@@ -289,7 +297,7 @@ function BreakPage() {
             <div>
               <p className={cn("font-display font-extrabold tabular leading-none", mode === "camera" ? "text-5xl" : "text-6xl")}>
                 {count}
-                <span className="text-2xl text-muted-foreground">/{exercise.target}</span>
+                <span className="text-2xl text-muted-foreground">/{target}</span>
               </p>
               <p className="mt-2 text-xs text-muted-foreground">{reached ? "hotovo!" : "opakování"}</p>
             </div>
@@ -304,7 +312,7 @@ function BreakPage() {
                 size="iconLg"
                 onClick={() => {
                   setRunning(false);
-                  setSecondsLeft(exercise.target);
+                  setSecondsLeft(target);
                 }}
                 aria-label="Začít znovu"
               >
@@ -323,7 +331,7 @@ function BreakPage() {
                   </>
                 ) : (
                   <>
-                    <Play /> {secondsLeft < exercise.target ? "Pokračovat" : "Spustit"}
+                    <Play /> {secondsLeft < target ? "Pokračovat" : "Spustit"}
                   </>
                 )}
               </Button>
@@ -355,7 +363,7 @@ function BreakPage() {
           Necítím se dobře – přeskočit
         </Button>
         <p className="px-2 text-center text-[11px] leading-relaxed text-muted-foreground">
-          {exercise.safety} Při bolesti, závrati nebo dušnosti přestaňte.
+          {cs.ex[exercise.id].safety} Při bolesti, závrati nebo dušnosti přestaňte.
         </p>
       </div>
     </Screen>
