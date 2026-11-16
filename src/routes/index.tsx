@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Flame, Footprints, Gift, Pause, Play, Sparkles } from "lucide-react";
+import { ArrowRight, Dumbbell, Flame, TimerReset, Footprints, Gift, Pause, Play, Sparkles } from "lucide-react";
 import { AppTile } from "@/components/pauza/AppTile";
 import { DemoBadge } from "@/components/pauza/DemoBadge";
 import { ProgressRing } from "@/components/pauza/ProgressRing";
@@ -46,18 +46,18 @@ function Overview() {
     <div className="space-y-5">
       <section className="animate-rise">
         <p className="text-sm text-muted-foreground">{dateLabel}</p>
-        <h1 className="text-3xl font-extrabold">Ahoj{settings.userName ? `, ${settings.userName}` : ""}!</h1>
+        <h1 className="text-[28px] font-bold leading-tight">Ahoj{settings.userName ? `, ${settings.userName}` : ""}!</h1>
       </section>
 
       <section className="surface bg-gradient-hero relative overflow-hidden p-5 animate-rise">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-muted-foreground">Dnes v hlídaných aplikacích</h2>
+          <h2 className="text-sm font-medium text-muted-foreground">Dnes v hlídaných aplikacích</h2>
           <DemoBadge />
         </div>
         <div className="mt-4 flex items-center gap-5">
           <ProgressRing value={ratio} size={132} stroke={12} tone={ratio >= 1 ? "destructive" : ratio >= 0.8 ? "warning" : "primary"}>
             <div>
-              <p className="font-display text-3xl font-extrabold tabular leading-none">{Math.round(ratio * 100)}%</p>
+              <p className="font-display text-[28px] font-bold leading-tight tabular leading-none">{Math.round(ratio * 100)}%</p>
               <p className="mt-1 text-[11px] text-muted-foreground">limitu</p>
             </div>
           </ProgressRing>
@@ -74,6 +74,13 @@ function Overview() {
           </div>
         </div>
       </section>
+
+      <NextStep
+        expiredName={active.find((r) => ruleStatus(r) === "expired" && !r.ignoredToday)?.name}
+        warningRule={active.find((r) => ruleStatus(r) === "warning")}
+        hasRules={rules.length > 0}
+        breaksToday={todays.length}
+      />
 
       <section className="grid grid-cols-3 gap-3">
         <Stat icon={Footprints} value={hydrated ? String(todays.length) : "–"} label={plural(todays.length, "pauza dnes", "pauzy dnes", "pauz dnes")} />
@@ -173,5 +180,58 @@ function Stat({ icon: Icon, value, label }: { icon: typeof Flame; value: string;
       <p className="mt-2 font-display text-2xl font-bold tabular leading-none">{value}</p>
       <p className="mt-1 text-[11px] leading-tight text-muted-foreground">{label}</p>
     </div>
+  );
+}
+
+function NextStep({
+  expiredName,
+  warningRule,
+  hasRules,
+  breaksToday,
+}: {
+  expiredName: string | undefined;
+  warningRule: { name: string; usedMinutes: number; limitMinutes: number; bonusMinutes: number } | undefined;
+  hasRules: boolean;
+  breaksToday: number;
+}) {
+  let title: string;
+  let text: string;
+  let to: "/pauza" | "/limity" = "/pauza";
+  let cta = "Začít pauzu";
+  let Icon = Dumbbell;
+  if (!hasRules) {
+    title = "Nastavte první limit";
+    text = "Vyberte aplikaci a denní čas, který jí chcete dát.";
+    to = "/limity";
+    cta = "Přidat limit";
+    Icon = TimerReset;
+  } else if (expiredName) {
+    title = `Limit pro ${expiredName} vypršel`;
+    text = "Krátká pohybová pauza vám přidá bonusové minuty.";
+  } else if (warningRule) {
+    const left = Math.max(0, warningRule.limitMinutes + warningRule.bonusMinutes - warningRule.usedMinutes);
+    title = `${warningRule.name}: zbývá ${formatMinutes(left)}`;
+    text = "Protáhněte se ještě předtím, než čas doběhne.";
+  } else if (breaksToday === 0) {
+    title = "Dnes ještě žádná pauza";
+    text = "Minuta pohybu stačí – kdykoli se vám to hodí.";
+  } else {
+    title = "Jde vám to skvěle";
+    text = `Dnes máte za sebou ${breaksToday} ${plural(breaksToday, "pauzu", "pauzy", "pauz")}. Další je dobrovolná.`;
+  }
+  return (
+    <section aria-labelledby="next-step" className="surface flex items-center gap-4 p-4 animate-rise">
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-primary/12 text-primary">
+        <Icon className="h-5 w-5" aria-hidden />
+      </span>
+      <div className="min-w-0 flex-1">
+        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Další krok</p>
+        <h2 id="next-step" className="text-base font-semibold leading-snug">{title}</h2>
+        <p className="text-xs text-muted-foreground">{text}</p>
+      </div>
+      <Button asChild size="sm" variant="hero" className="shrink-0">
+        <Link to={to}>{cta}</Link>
+      </Button>
+    </section>
   );
 }

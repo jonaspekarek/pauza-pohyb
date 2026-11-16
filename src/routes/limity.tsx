@@ -30,7 +30,7 @@ function LimitsPage() {
     <div className="space-y-4">
       <div className="flex items-end justify-between animate-rise">
         <div>
-          <h1 className="text-3xl font-extrabold">Limity</h1>
+          <h1 className="text-[28px] font-bold leading-tight">Limity</h1>
           <p className="text-sm text-muted-foreground">
             {rules.length} {rules.length === 1 ? "aplikace" : rules.length >= 2 && rules.length <= 4 ? "aplikace" : "aplikací"} pod dohledem
           </p>

@@ -29,7 +29,7 @@ function ExercisesPage() {
   return (
     <div className="space-y-5">
       <div className="animate-rise">
-        <h1 className="text-3xl font-extrabold">Cvičení</h1>
+        <h1 className="text-[28px] font-bold leading-tight">Cvičení</h1>
         <p className="text-sm text-muted-foreground">Krátké cviky pro začátečníky. Vždy se můžete zastavit.</p>
       </div>
 

@@ -152,7 +152,7 @@ function BreakPage() {
           <span className="grid h-24 w-24 place-items-center rounded-full bg-info/15 text-info animate-pop">
             <HandHeart className="h-12 w-12" aria-hidden />
           </span>
-          <h1 className="mt-8 text-3xl font-extrabold">To je úplně v pořádku</h1>
+          <h1 className="mt-8 text-[28px] font-bold leading-tight">To je úplně v pořádku</h1>
           <p className="mt-2 max-w-xs text-muted-foreground">
             Poslouchat své tělo je důležitější než jakýkoli cvik. Pokud bolest nebo nevolnost přetrvává, poraďte se s lékařem.
           </p>

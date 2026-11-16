@@ -37,23 +37,23 @@ export function AppShell() {
     <div className="min-h-dvh bg-gradient-page">
       <div className="mx-auto flex min-h-dvh max-w-md flex-col">
         {!fullscreen && (
-          <header className="sticky top-0 z-30 flex items-center gap-2.5 border-b border-border/60 bg-background/80 px-5 py-3 backdrop-blur-lg">
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-gradient-lime text-primary-foreground shadow-glow">
-              <Activity className="h-5 w-5" aria-hidden />
+          <header className="sticky top-0 z-30 flex items-center gap-2.5 bg-background/75 px-5 py-3.5 backdrop-blur-xl">
+            <span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-primary text-primary-foreground">
+              <Activity className="h-4 w-4" aria-hidden />
             </span>
-            <span className="font-display text-lg font-bold tracking-tight">Pauza &amp; Pohyb</span>
+            <span className="truncate font-display text-base font-semibold tracking-tight">Pauza &amp; Pohyb</span>
             <DemoBadge className="ml-auto" label="Prototyp" />
           </header>
         )}
 
-        <main className={cn("flex-1", fullscreen ? "" : "px-4 pt-4 pb-28")}>
+        <main className={cn("flex-1", fullscreen ? "" : "px-4 pt-2 pb-32")}>
           <Outlet />
         </main>
 
         {!fullscreen && (
           <nav
             aria-label="Hlavní navigace"
-            className="safe-bottom fixed inset-x-0 bottom-0 z-40 mx-auto max-w-md border-t border-border/60 bg-background/90 px-2 pt-1.5 backdrop-blur-lg"
+            className="safe-bottom fixed inset-x-3 bottom-3 z-40 mx-auto max-w-[26rem] rounded-2xl border border-border bg-card/90 px-1.5 pt-1.5 shadow-card backdrop-blur-xl"
           >
             <ul className="grid grid-cols-4">
               {TABS.map(({ to, label, icon: Icon }) => {
@@ -64,13 +64,13 @@ export function AppShell() {
                       to={to}
                       aria-current={active ? "page" : undefined}
                       className={cn(
-                        "flex flex-col items-center gap-1 rounded-xl py-1.5 text-[11px] font-semibold transition-colors",
+                        "flex flex-col items-center gap-0.5 rounded-xl py-1 text-[11px] font-semibold transition-colors",
                         active ? "text-primary" : "text-muted-foreground hover:text-foreground",
                       )}
                     >
                       <span
                         className={cn(
-                          "grid h-8 w-14 place-items-center rounded-full transition-all",
+                          "grid h-7 w-12 place-items-center rounded-full transition-colors",
                           active && "bg-primary/15",
                         )}
                       >

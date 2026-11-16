@@ -42,7 +42,7 @@ function SettingsPage() {
   return (
     <div className="space-y-5">
       <div className="animate-rise">
-        <h1 className="text-3xl font-extrabold">Nastavení</h1>
+        <h1 className="text-[28px] font-bold leading-tight">Nastavení</h1>
         <p className="text-sm text-muted-foreground">Vše se ukládá jen v tomto zařízení.</p>
       </div>
 
