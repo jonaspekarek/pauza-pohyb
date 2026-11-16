@@ -81,7 +81,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { name: "theme-color", content: "#141a2b" },
+      { name: "theme-color", content: "#111733" },
       { title: "Pauza & Pohyb" },
       { name: "description", content: "Prototyp aplikace, která spojuje limity pro rušivé aplikace s krátkými pohybovými pauzami." },
       { property: "og:title", content: "Pauza & Pohyb" },

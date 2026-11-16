@@ -175,7 +175,7 @@ export function CameraCoach({
         setFeedback(msg);
       }
     };
-    const color = getComputedStyle(document.documentElement).getPropertyValue("--primary").trim() || "lime";
+    const color = getComputedStyle(document.documentElement).getPropertyValue("--primary").trim() || "violet";
 
     const tick = () => {
       if (session !== sessionRef.current) return;

@@ -105,7 +105,7 @@ function BreakPage() {
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <div className="relative">
             <span className="absolute inset-0 rounded-full bg-primary/25 blur-2xl animate-breathe" aria-hidden />
-            <span className="relative grid h-28 w-28 place-items-center rounded-full bg-gradient-lime text-primary-foreground shadow-glow animate-pop">
+            <span className="relative grid h-28 w-28 place-items-center rounded-full bg-gradient-primary text-primary-foreground shadow-glow animate-pop">
               <Check className="h-14 w-14" strokeWidth={3} aria-hidden />
             </span>
           </div>

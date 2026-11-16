@@ -160,7 +160,7 @@ function Overview() {
         to="/pauza"
         className="surface group flex items-center gap-4 p-4 transition-colors hover:bg-card-elevated"
       >
-        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-lime text-primary-foreground shadow-glow">
+        <span className="grid h-12 w-12 place-items-center rounded-2xl bg-gradient-primary text-primary-foreground shadow-glow">
           <Sparkles className="h-6 w-6" aria-hidden />
         </span>
         <span className="flex-1">

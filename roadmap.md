@@ -1,3 +1,12 @@
 # Roadmap
 - [x] Android plan (varianta C) – .lovable/plan.md
 - [x] Visual redesign of whole app
+- [x] Concept 1 palette: deep navy, violet primary, pale blue secondary (no green)
+- [ ] Exercise catalogue: more exercises, categories filter, adjustable target for free breaks
+- [ ] Searchable app picker (catalogue + custom, web-preview label, Android-ready provider interface)
+- [ ] Full-screen "Čas vypršel" flow + "Vyzkoušet vypršení" demo button
+- [ ] "Přeskočit dnes" with undo; midnight rollover while app is open
+- [ ] New "Přehled" page (strong-arm icon): optional height/weight, BMI without adult categories, user-entered weight chart, activity counts, no calories
+- [ ] Full Czech/English/Spanish translations, persisted, default Czech
+- [ ] Camera: honest per-exercise orientational counting, autostart only after explicit tap
+- [ ] Tests + browser verification of key flows
