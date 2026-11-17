@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type ReactNode } from "react";
 import { AppTile } from "@/components/pauza/AppTile";
 import { CameraCoach } from "@/components/pauza/CameraCoach";
 import { DemoBadge } from "@/components/pauza/DemoBadge";
+import { ExerciseFigure } from "@/components/pauza/ExerciseFigure";
 import { ProgressRing } from "@/components/pauza/ProgressRing";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -185,8 +186,6 @@ function BreakPage() {
     );
   }
 
-  const Icon = exercise.icon;
-
   return (
     <Screen>
       <header className="flex items-center gap-3">
@@ -240,8 +239,8 @@ function BreakPage() {
 
       <section className="surface p-4 animate-rise" key={exercise.id}>
         <div className="flex items-center gap-3">
-          <span className="grid h-12 w-12 place-items-center rounded-2xl bg-primary/15 text-primary">
-            <Icon className="h-6 w-6" aria-hidden />
+          <span className="w-24 shrink-0 rounded-2xl bg-primary/10 p-1">
+            <ExerciseFigure figure={exercise.figure} animate />
           </span>
           <div>
             <h1 className="text-2xl font-extrabold leading-tight">{cs.ex[exercise.id].name}</h1>

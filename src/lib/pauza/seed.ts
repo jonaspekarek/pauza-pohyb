@@ -37,6 +37,8 @@ export function createSeedState(): AppState {
     simulatingRuleId: null,
     settings: { userName: "", rewardMinutes: 10, cameraFeedback: true, onboarded: false, language: "cs" },
     body: { heightCm: 178, weights, sample: true },
+    favorites: [],
+    exerciseTargets: {},
     history,
     rules: [
       { id: "seed-tiktok", appId: "tiktok", name: "TikTok", limitMinutes: 30, usedMinutes: 22, bonusMinutes: 0, action: "exercise", exerciseId: "kliky", exerciseTarget: 10, autoCamera: true, enabled: true, breakTriggered: false, ignoredToday: false },

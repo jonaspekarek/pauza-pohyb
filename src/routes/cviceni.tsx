@@ -4,6 +4,7 @@ import { Camera, CheckCircle2, ChevronRight, CircleSlash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { ExerciseFigure } from "@/components/pauza/ExerciseFigure";
 import { EXERCISES, getExercise } from "@/lib/pauza/exercises";
 import { usePauzaState } from "@/lib/pauza/store";
 
@@ -35,12 +36,11 @@ function ExercisesPage() {
 
       <div className="space-y-3">
         {EXERCISES.map((e) => {
-          const Icon = e.icon;
           return (
             <Collapsible key={e.id} className="surface overflow-hidden animate-rise">
               <div className="flex items-center gap-3 p-4">
-                <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-primary/15 text-primary">
-                  <Icon className="h-6 w-6" aria-hidden />
+                <span className="w-20 shrink-0 rounded-2xl bg-primary/10 p-1">
+                  <ExerciseFigure figure={e.figure} />
                 </span>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">

@@ -21,6 +21,7 @@ import { pauzaActions, type RuleInput } from "@/lib/pauza/store";
 import type { AppRule, ExerciseId, LimitAction } from "@/lib/pauza/types";
 import { cn } from "@/lib/utils";
 import { AppTile } from "./AppTile";
+import { ExerciseFigure } from "./ExerciseFigure";
 import { ACTION_DESCRIPTION, ACTION_LABEL } from "./RuleStatus";
 import { DemoBadge } from "./DemoBadge";
 
@@ -200,7 +201,6 @@ export function RuleSheet({
             <Label className="mb-2 block text-sm font-semibold">Cvik pro pauzu</Label>
             <div className="grid grid-cols-2 gap-2">
               {EXERCISES.map((e) => {
-                const Icon = e.icon;
                 const active = form.exerciseId === e.id;
                 return (
                   <button
@@ -213,7 +213,7 @@ export function RuleSheet({
                       active ? "border-primary bg-primary/10" : "border-border hover:bg-secondary",
                     )}
                   >
-                    <Icon className={cn("h-5 w-5 shrink-0", active ? "text-primary" : "text-muted-foreground")} aria-hidden />
+                    <span className="w-10 shrink-0"><ExerciseFigure figure={e.figure} /></span>
                     <span className="min-w-0">
                       <span className="block truncate text-sm font-semibold">{cs.ex[e.id].name}</span>
                       <span className="block text-[11px] text-muted-foreground">{cs.common.target(e.kind, e.target)}</span>

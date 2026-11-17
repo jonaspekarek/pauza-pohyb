@@ -45,6 +45,8 @@ function persist(s: AppState) {
     history: s.history.slice(0, 300),
     settings: s.settings,
     body: s.body,
+    favorites: s.favorites,
+    exerciseTargets: s.exerciseTargets,
     dayKey: s.dayKey,
   };
   try {
@@ -113,6 +115,8 @@ export function hydrateStore() {
           history: (parsed.history ?? []).map((h) => ({ ...h, exerciseId: isExerciseId(h.exerciseId) ? h.exerciseId : "drepy" })),
           settings: { ...current.settings, ...parsed.settings },
           body: { ...current.body, ...(parsed.body ?? {}) },
+          favorites: Array.isArray(parsed.favorites) ? parsed.favorites.filter(isExerciseId) : [],
+          exerciseTargets: typeof parsed.exerciseTargets === "object" && parsed.exerciseTargets ? parsed.exerciseTargets : {},
           dayKey: parsed.dayKey ?? todayKey(),
         };
       }
