@@ -23,7 +23,15 @@ export type ExerciseId =
   | "zvedani-nohou"
   | "ruske-otacky"
   | "superman"
-  | "protazeni";
+  | "protazeni"
+  | "siroke-kliky"
+  | "zkracovacky"
+  | "zvedani-kolen"
+  | "bird-dog"
+  | "protazeni-zad"
+  | "protazeni-ramen"
+  | "protazeni-nohou"
+  | "protazeni-krku";
 
 export interface AppRule {
   id: string;
@@ -90,6 +98,10 @@ export interface PersistedState {
   history: BreakLog[];
   settings: Settings;
   body: BodyData;
+  /** Exercises the user starred. */
+  favorites: ExerciseId[];
+  /** User-chosen target (reps or seconds) per exercise for free breaks. */
+  exerciseTargets: Partial<Record<ExerciseId, number>>;
   /** Local date key (YYYY-MM-DD) when usage counters were last reset. */
   dayKey: string;
 }
