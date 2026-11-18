@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import { getExercise, exerciseSeconds, isExerciseId } from "./exercises";
+import { clampTarget, getExercise, exerciseSeconds, isExerciseId } from "./exercises";
 import {
   applyUsage,
   bonusForCompletedBreak,
@@ -12,7 +12,7 @@ import {
   upsertWeight,
 } from "./logic";
 import { createSeedState } from "./seed";
-import type { AppRule, AppState, BodyData, BreakLog, Lang, PersistedState, Settings } from "./types";
+import type { AppRule, AppState, BodyData, BreakLog, ExerciseId, Lang, PersistedState, Settings } from "./types";
 
 const STORAGE_KEY = "pauza-pohyb:v1";
 /** Used for calorie estimates until the user enters a weight. */
@@ -94,6 +94,15 @@ function normalizeRule(r: Partial<AppRule> & Pick<AppRule, "id" | "name">): AppR
   };
 }
 
+function sanitizeTargets(raw: unknown): Partial<Record<ExerciseId, number>> {
+  const out: Partial<Record<ExerciseId, number>> = {};
+  if (!raw || typeof raw !== "object") return out;
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>)) {
+    if (isExerciseId(k) && typeof v === "number" && v > 0) out[k] = clampTarget(getExercise(k), v);
+  }
+  return out;
+}
+
 function detectLanguage(): Lang {
   const l = (navigator.language || "cs").slice(0, 2).toLowerCase();
   return l === "en" || l === "es" ? l : "cs";
@@ -116,7 +125,7 @@ export function hydrateStore() {
           settings: { ...current.settings, ...parsed.settings },
           body: { ...current.body, ...(parsed.body ?? {}) },
           favorites: Array.isArray(parsed.favorites) ? parsed.favorites.filter(isExerciseId) : [],
-          exerciseTargets: typeof parsed.exerciseTargets === "object" && parsed.exerciseTargets ? parsed.exerciseTargets : {},
+          exerciseTargets: sanitizeTargets(parsed.exerciseTargets),
           dayKey: parsed.dayKey ?? todayKey(),
         };
       }
@@ -181,6 +190,11 @@ export const pauzaActions = {
   },
   unignoreToday(id: string) {
     pauzaActions.updateRule(id, { ignoredToday: false, breakTriggered: false });
+  },
+  /** Saves the default target for voluntary breaks (separate from rule targets). */
+  setExerciseTarget(id: ExerciseId, value: number) {
+    const s = get();
+    set({ ...s, exerciseTargets: { ...s.exerciseTargets, [id]: clampTarget(getExercise(id), value) } });
   },
   setSimulating(id: string | null) {
     set({ ...get(), simulatingRuleId: id });

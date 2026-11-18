@@ -218,3 +218,63 @@ export function filterExercises(
     return q === "" || normalizeSearch(opts.nameOf(e)).includes(q) || normalizeSearch(e.id).includes(q);
   });
 }
+
+/* ---------- Required (limit) breaks ---------- */
+
+/** The only exercises allowed in a required break, with default and maximum targets. */
+export const REQUIRED_BREAK_EXERCISES: Readonly<Partial<Record<ExerciseId, { target: number; max: number }>>> = {
+  "kliky-o-zed": { target: 12, max: 20 },
+  drepy: { target: 15, max: 20 },
+  vypony: { target: 20, max: 25 },
+  "beh-na-miste": { target: 45, max: 60 },
+  "protazeni-zad": { target: 30, max: 45 },
+  "protazeni-ramen": { target: 30, max: 60 },
+  "protazeni-nohou": { target: 30, max: 45 },
+  "protazeni-krku": { target: 30, max: 40 },
+  protazeni: { target: 60, max: 90 },
+};
+
+export const REQUIRED_EXERCISE_IDS = Object.keys(REQUIRED_BREAK_EXERCISES) as ExerciseId[];
+export const REQUIRED_FALLBACK_ID: ExerciseId = "protazeni";
+export const NEW_RULE_EXERCISE_ID: ExerciseId = "drepy";
+
+export function isRequiredAllowed(id: unknown): id is ExerciseId {
+  return typeof id === "string" && id in REQUIRED_BREAK_EXERCISES;
+}
+
+/** Bounds for a required-break target; min 1 rep / 5 s, max from the safe list. */
+export function requiredTargetBounds(id: ExerciseId): { min: number; max: number; step: number } {
+  const e = getExercise(id);
+  const max = REQUIRED_BREAK_EXERCISES[id]?.max ?? targetBounds(e).max;
+  return e.kind === "time" ? { min: 5, max, step: 5 } : { min: 1, max, step: 1 };
+}
+
+export function requiredDefaultTarget(id: ExerciseId): number {
+  return REQUIRED_BREAK_EXERCISES[id]?.target ?? getExercise(id).target;
+}
+
+export function clampRequiredTarget(id: ExerciseId, n: number): number {
+  if (!Number.isFinite(n) || n <= 0) return requiredDefaultTarget(id);
+  const b = requiredTargetBounds(id);
+  return Math.min(b.max, Math.max(b.min, Math.round(n)));
+}
+
+/**
+ * What a required break actually runs. A rule with a no-longer-allowed exercise is NOT
+ * rewritten; the break uses the safe fallback and reports `replaced` so the UI can warn.
+ */
+export function requiredBreakPlan(rule: { exerciseId: string; exerciseTarget: number }): {
+  exerciseId: ExerciseId;
+  target: number;
+  replaced: boolean;
+} {
+  if (isRequiredAllowed(rule.exerciseId)) {
+    return { exerciseId: rule.exerciseId, target: clampRequiredTarget(rule.exerciseId, rule.exerciseTarget), replaced: false };
+  }
+  return { exerciseId: REQUIRED_FALLBACK_ID, target: requiredDefaultTarget(REQUIRED_FALLBACK_ID), replaced: true };
+}
+
+/** Voluntary break target: the user's saved default for that exercise, never a rule's target. */
+export function voluntaryTarget(e: Exercise, saved: Partial<Record<ExerciseId, number>>): number {
+  return resolveTarget(e, { saved: saved[e.id] });
+}

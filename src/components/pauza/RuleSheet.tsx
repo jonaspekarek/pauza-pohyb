@@ -15,7 +15,15 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Slider } from "@/components/ui/slider";
 import { APP_CATALOG } from "@/lib/pauza/apps";
-import { EXERCISES, getExercise, targetBounds } from "@/lib/pauza/exercises";
+import {
+  clampRequiredTarget,
+  getExercise,
+  isRequiredAllowed,
+  NEW_RULE_EXERCISE_ID,
+  REQUIRED_EXERCISE_IDS,
+  requiredDefaultTarget,
+  requiredTargetBounds,
+} from "@/lib/pauza/exercises";
 import { formatMinutes } from "@/lib/pauza/logic";
 import { pauzaActions, type RuleInput } from "@/lib/pauza/store";
 import type { AppRule, ExerciseId, LimitAction } from "@/lib/pauza/types";
@@ -25,7 +33,7 @@ import { ExerciseFigure } from "./ExerciseFigure";
 import { ACTION_DESCRIPTION, ACTION_LABEL } from "./RuleStatus";
 import { DemoBadge } from "./DemoBadge";
 
-const EMPTY: RuleInput = { appId: "tiktok", name: "TikTok", limitMinutes: 30, action: "exercise", exerciseId: "kliky", exerciseTarget: 10, autoCamera: true };
+const EMPTY: RuleInput = { appId: "tiktok", name: "TikTok", limitMinutes: 30, action: "exercise", exerciseId: NEW_RULE_EXERCISE_ID, exerciseTarget: requiredDefaultTarget(NEW_RULE_EXERCISE_ID), autoCamera: true };
 
 export function RuleSheet({
   open,
@@ -48,7 +56,9 @@ export function RuleSheet({
         limitMinutes: editing.limitMinutes,
         action: editing.action,
         exerciseId: editing.exerciseId,
-        exerciseTarget: editing.exerciseTarget,
+        exerciseTarget: isRequiredAllowed(editing.exerciseId)
+          ? clampRequiredTarget(editing.exerciseId, editing.exerciseTarget)
+          : editing.exerciseTarget,
         autoCamera: editing.autoCamera,
       });
       setCustomName(editing.appId === "custom" ? editing.name : "");
@@ -60,11 +70,13 @@ export function RuleSheet({
 
   const isCustom = form.appId === "custom";
   const name = isCustom ? customName.trim() : form.name;
-  const canSave = name.length > 0 && form.limitMinutes >= 5;
+  const exerciseOk = isRequiredAllowed(form.exerciseId);
+  const canSave = name.length > 0 && form.limitMinutes >= 5 && exerciseOk;
+  const reqName = (id: ExerciseId) => (id === "beh-na-miste" ? cs.requiredBreak.walkName : cs.ex[id].name);
 
   function save() {
     if (!canSave) return;
-    const input = { ...form, name };
+    const input = { ...form, name, exerciseTarget: clampRequiredTarget(form.exerciseId, form.exerciseTarget) };
     if (editing) {
       pauzaActions.updateRule(editing.id, { ...input, breakTriggered: false });
       toast.success(`Limit pro ${name} upraven`);
@@ -198,16 +210,23 @@ export function RuleSheet({
           </section>
 
           <section>
-            <Label className="mb-2 block text-sm font-semibold">Cvik pro pauzu</Label>
+            <Label className="mb-1 block text-sm font-semibold">Cvik pro pauzu</Label>
+            <p className="mb-2 text-xs text-muted-foreground">{cs.requiredBreak.onlySafe}</p>
+            {!exerciseOk && (
+              <p role="alert" className="mb-2 rounded-xl border border-info/40 bg-info/10 p-2.5 text-xs">
+                {cs.requiredBreak.legacyEditWarning(cs.ex[form.exerciseId]?.name ?? form.exerciseId)}
+              </p>
+            )}
             <div className="grid grid-cols-2 gap-2">
-              {EXERCISES.map((e) => {
+              {REQUIRED_EXERCISE_IDS.map((id) => {
+                const e = getExercise(id);
                 const active = form.exerciseId === e.id;
                 return (
                   <button
                     key={e.id}
                     type="button"
                     aria-pressed={active}
-                    onClick={() => setForm((f) => ({ ...f, exerciseId: e.id as ExerciseId, exerciseTarget: e.target }))}
+                    onClick={() => setForm((f) => ({ ...f, exerciseId: e.id, exerciseTarget: requiredDefaultTarget(e.id) }))}
                     className={cn(
                       "flex items-center gap-2 rounded-xl border p-2.5 text-left transition-colors",
                       active ? "border-primary bg-primary/10" : "border-border hover:bg-secondary",
@@ -215,8 +234,8 @@ export function RuleSheet({
                   >
                     <span className="w-10 shrink-0"><ExerciseFigure figure={e.figure} /></span>
                     <span className="min-w-0">
-                      <span className="block truncate text-sm font-semibold">{cs.ex[e.id].name}</span>
-                      <span className="block text-[11px] text-muted-foreground">{cs.common.target(e.kind, e.target)}</span>
+                      <span className="block text-sm font-semibold leading-tight">{reqName(e.id)}</span>
+                      <span className="block text-[11px] text-muted-foreground">{cs.common.target(e.kind, requiredDefaultTarget(e.id))}</span>
                     </span>
                   </button>
                 );
@@ -224,7 +243,7 @@ export function RuleSheet({
             </div>
           </section>
 
-          <section>
+          {exerciseOk && <section>
             <div className="mb-2 flex items-baseline justify-between">
               <Label className="text-sm font-semibold">Kolik toho musíte udělat</Label>
               <span className="font-display text-2xl font-bold tabular text-primary">
@@ -232,7 +251,7 @@ export function RuleSheet({
               </span>
             </div>
             {(() => {
-              const b = targetBounds(getExercise(form.exerciseId));
+              const b = requiredTargetBounds(form.exerciseId);
               const change = (d: number) =>
                 setForm((f) => ({ ...f, exerciseTarget: Math.min(b.max, Math.max(b.min, f.exerciseTarget + d)) }));
               return (
@@ -266,7 +285,7 @@ export function RuleSheet({
                 />
               </label>
             )}
-          </section>
+          </section>}
         </div>
 
         <DrawerFooter className="safe-bottom flex-row gap-2">

@@ -9,7 +9,7 @@ import { ExerciseFigure } from "@/components/pauza/ExerciseFigure";
 import { ProgressRing } from "@/components/pauza/ProgressRing";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EXERCISES, getExercise } from "@/lib/pauza/exercises";
+import { EXERCISES, getExercise, REQUIRED_EXERCISE_IDS, requiredBreakPlan, requiredDefaultTarget, voluntaryTarget } from "@/lib/pauza/exercises";
 import { formatClock } from "@/lib/pauza/logic";
 import { pauzaActions, usePauzaState } from "@/lib/pauza/store";
 import type { ExerciseId } from "@/lib/pauza/types";
@@ -40,12 +40,24 @@ type Phase = "active" | "done" | "skipped";
 function BreakPage() {
   const { pravidlo, cvik } = Route.useSearch();
   const navigate = useNavigate();
-  const { rules, settings } = usePauzaState();
+  const { rules, settings, exerciseTargets } = usePauzaState();
   const rule = rules.find((r) => r.id === pravidlo);
+  // A break started from a limit is "required": only safe exercises, rule target wins.
+  const required = !!rule;
+  const plan = rule ? requiredBreakPlan(rule) : null;
 
-  const [exerciseId, setExerciseId] = useState<ExerciseId>(getExercise(cvik ?? rule?.exerciseId).id);
+  const [exerciseId, setExerciseId] = useState<ExerciseId>(plan ? plan.exerciseId : getExercise(cvik).id);
   const exercise = getExercise(exerciseId);
-  const target = rule && rule.exerciseId === exercise.id ? rule.exerciseTarget : exercise.target;
+  const target = plan
+    ? exercise.id === plan.exerciseId
+      ? plan.target
+      : requiredDefaultTarget(exercise.id)
+    : voluntaryTarget(exercise, exerciseTargets);
+  const walk = required && exercise.id === "beh-na-miste";
+  const exName = walk ? cs.requiredBreak.walkName : cs.ex[exercise.id].name;
+  const exSteps = walk ? cs.requiredBreak.walkSteps : cs.ex[exercise.id].steps;
+  const exEasier = walk ? cs.requiredBreak.walkEasier : cs.ex[exercise.id].easier;
+  const choices = required ? REQUIRED_EXERCISE_IDS.map((id) => getExercise(id)) : EXERCISES;
   const [mode, setMode] = useState<"manual" | "camera">("manual");
   const [phase, setPhase] = useState<Phase>("active");
   const [count, setCount] = useState(0);
@@ -112,7 +124,7 @@ function BreakPage() {
           </div>
           <h1 className="mt-8 text-4xl font-extrabold">Skvělá práce!</h1>
           <p className="mt-2 max-w-xs text-muted-foreground">
-            {cs.ex[exercise.id].name} hotovo. Tělo i hlava si zaslouží tyhle malé pauzy.
+            {exName} hotovo. Tělo i hlava si zaslouží tyhle malé pauzy.
           </p>
           {bonus > 0 && rule && (
             <div className="mt-6 flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/10 px-4 py-3">
@@ -219,8 +231,14 @@ function BreakPage() {
         </div>
       )}
 
+      {plan?.replaced && (
+        <p role="status" className="rounded-2xl border border-info/40 bg-info/10 p-3 text-sm">
+          {cs.requiredBreak.legacyWarning(cs.ex[rule!.exerciseId]?.name ?? rule!.exerciseId)}
+        </p>
+      )}
+
       <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1" role="radiogroup" aria-label="Vyberte cvik">
-        {EXERCISES.map((e) => (
+        {choices.map((e) => (
           <button
             key={e.id}
             type="button"
@@ -232,7 +250,7 @@ function BreakPage() {
               e.id === exerciseId ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground hover:text-foreground",
             )}
           >
-            {cs.ex[e.id].name}
+            {required && e.id === "beh-na-miste" ? cs.requiredBreak.walkName : cs.ex[e.id].name}
           </button>
         ))}
       </div>
@@ -243,18 +261,18 @@ function BreakPage() {
             <ExerciseFigure figure={exercise.figure} animate />
           </span>
           <div>
-            <h1 className="text-2xl font-extrabold leading-tight">{cs.ex[exercise.id].name}</h1>
+            <h1 className="text-2xl font-extrabold leading-tight">{exName}</h1>
             <p className="text-sm text-muted-foreground">Cíl: {cs.common.target(exercise.kind, target)}</p>
           </div>
         </div>
         <ol className="mt-3 list-decimal space-y-0.5 pl-5 text-sm text-muted-foreground">
-          {cs.ex[exercise.id].steps.map((s: string) => (
+          {exSteps.map((s: string) => (
             <li key={s}>{s}</li>
           ))}
         </ol>
         <p className="mt-3 rounded-xl bg-secondary p-2.5 text-xs">
           <span className="font-semibold text-primary">Lehčí varianta: </span>
-          {cs.ex[exercise.id].easier}
+          {exEasier}
         </p>
       </section>
 

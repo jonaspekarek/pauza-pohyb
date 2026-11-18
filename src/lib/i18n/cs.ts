@@ -185,6 +185,22 @@ export const cs = {
     withCamera: "s kamerou",
     skippedOk: "přeskočeno, v pořádku",
   },
+  requiredBreak: {
+    walkName: "Rázná chůze na místě",
+    walkSummary: "Svižná chůze na místě – lehčí varianta běhu.",
+    walkSteps: [
+      "Postavte se rovně, ramena uvolněte.",
+      "Střídavě zvedejte nohy jako při rázné chůzi.",
+      "Paže se volně pohupují podél těla.",
+      "Dýchejte plynule, tempo si zvolte sami.",
+    ],
+    walkEasier: "Zpomalte nebo jen přešlapujte z nohy na nohu.",
+    legacyWarning: (old: string) =>
+      `Cvik „${old}“ už není pro povinné pauzy dostupný. Tentokrát použijeme Celkové protažení (60 s). Nový cvik vyberete v úpravě limitu.`,
+    legacyEditWarning: (old: string) =>
+      `Cvik „${old}“ už není pro povinné pauzy dostupný. Vyberte prosím nový cvik – změna se uloží až po stisknutí Uložit.`,
+    onlySafe: "Pro povinné pauzy jsou dostupné jen bezpečné cviky.",
+  },
   exDetail: {
     back: "Zpět na cviky",
     notFound: "Tento cvik neexistuje.",
