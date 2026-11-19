@@ -62,11 +62,16 @@ export interface BreakLog {
   at: string;
   exerciseId: ExerciseId;
   ruleId?: string | undefined;
+  /** "camera" only when the camera counted at least one rep. */
   mode: "manual" | "camera";
   completed: boolean;
   bonusGranted: number;
   /** Reps or seconds actually done. */
   amount?: number | undefined;
+  /** Reps the camera counted (approximate). Missing in older entries. */
+  cameraReps?: number | undefined;
+  /** Reps the user added by hand. Missing in older entries. */
+  manualReps?: number | undefined;
   /** Estimated kilocalories burned. */
   kcal?: number | undefined;
 }
